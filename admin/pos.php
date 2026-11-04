@@ -62,7 +62,24 @@ $orders = db()->query("SELECT o.*, t.label AS table_label FROM orders o
           <?php endforeach; ?>
         </table>
       </div>
-      <div style="text-align:right;min-width:230px">
+      <div style="text-align:right;min-width:260px">
+        <?php $items->execute([$o['id']]); ?>
+        <details style="text-align:left;background:#FBF9F5;border:1px dashed #C9D4BC;border-radius:14px;padding:10px 12px;margin-bottom:8px">
+          <summary style="cursor:pointer;font-weight:700;font-size:.82rem;color:var(--green)">🧾 Lihat Struk Tagihan</summary>
+          <div style="font-family:monospace;font-size:.76rem;line-height:1.6;margin-top:8px;background:#fff;padding:10px;border-radius:10px">
+            <strong style="letter-spacing:.1em">KINAR RESTO</strong><br>
+            Struk Tagihan · <?= e($o['order_code']) ?><br>
+            <?= e($o['table_label'] ?: 'Takeaway') ?> · <?= e($o['customer_name']) ?><br>
+            <?= date('d/m/Y H:i', strtotime($o['created_at'])) ?><br>
+            ------------------------------<br>
+            <?php foreach ($items->fetchAll() as $it): ?>
+            <?= $it['qty'] ?>x <?= e($it['name']) ?><br>
+            &nbsp;&nbsp;&nbsp;<?= rupiah($it['price'] * $it['qty']) ?><br>
+            <?php endforeach; ?>
+            ------------------------------<br>
+            <strong>TOTAL: <?= rupiah($o['total']) ?></strong>
+          </div>
+        </details>
         <div style="font-size:1.2rem;font-weight:800"><?= rupiah($o['total']) ?></div>
         <?php if ($o['status'] === 'menunggu'): ?>
           <a class="btn btn-wine btn-sm" href="?confirm=<?= $o['id'] ?>">✔ Konfirmasi &amp; Cetak</a>
@@ -70,8 +87,14 @@ $orders = db()->query("SELECT o.*, t.label AS table_label FROM orders o
           <form method="post" style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
             <input type="hidden" name="action" value="pay">
             <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-            <select name="method" style="width:110px;padding:6px"><option value="tunai">Tunai</option><option value="qris">QRIS</option><option value="transfer">Transfer</option><option value="kartu">Kartu</option></select>
-            <input type="number" name="amount_paid" value="<?= $o['total'] ?>" style="width:120px;padding:6px">
+            <div style="width:100%;text-align:right"><label class="lbl" style="display:inline">Metode Pembayaran</label></div>
+            <select name="method" style="width:130px;padding:6px">
+              <option value="tunai">💵 Tunai</option>
+              <option value="qris">📱 QRIS</option>
+              <option value="transfer">🏦 Transfer</option>
+              <option value="kartu">💳 Kartu</option>
+            </select>
+            <input type="number" name="amount_paid" value="<?= $o['total'] ?>" placeholder="Nominal diterima" style="width:130px;padding:6px">
             <button class="btn btn-green btn-sm" type="submit">💰 Bayar &amp; Cetak Struk</button>
           </form>
         <?php endif; ?>

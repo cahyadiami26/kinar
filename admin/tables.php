@@ -45,9 +45,13 @@ $tables = db()->query('SELECT t.*, (SELECT COUNT(*) FROM table_sessions s WHERE 
   <table class="data">
     <tr><th>QR Code</th><th>Meja</th><th>Kapasitas</th><th>Status</th><th>Sesi Aktif</th><th>URL QR</th></tr>
     <?php foreach ($tables as $t): ?>
-    <?php $qr_url = BASE_URL . '/order/?token=' . $t['qr_token']; ?>
+    <?php $qr_url = BASE_URL . '/order/?token=' . $t['qr_token'];
+          // QR utama dari generator online; fallback ke generator lokal (SVG) bila offline
+          $qr_online = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&color=1F3D1B&data=' . urlencode($qr_url);
+          $qr_fallback = 'data:image/svg+xml;base64,' . base64_encode(qr_svg($qr_url, 4)); ?>
     <tr>
-      <td><?= qr_svg($qr_url, 3) ?></td>
+      <td><img src="<?= e($qr_online) ?>" width="120" height="120" alt="QR <?= e($t['label']) ?>"
+               onerror="this.onerror=null;this.src='<?= $qr_fallback ?>'"></td>
       <td><strong><?= e($t['label']) ?></strong><br><small style="color:var(--muted)"><?= e($t['table_code']) ?></small></td>
       <td><?= $t['capacity'] ?: '-' ?> org</td>
       <td><span class="pill <?= $t['status']=='kosong' ? 'p-ok' : 'p-warn' ?>"><span class="dot"></span><?= e($t['status']) ?></span></td>

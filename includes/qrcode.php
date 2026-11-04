@@ -37,7 +37,6 @@ function qr_encode(string $text): array {
     $bits .= str_pad(decbin($len), $v <= 9 ? 8 : 16, '0', STR_PAD_LEFT);
     foreach (str_split($text) as $ch) $bits .= str_pad(decbin(ord($ch)), 8, '0', STR_PAD_LEFT);
     $capacityBits = $cap[$v] * 8;
-    $bits = substr($bits, 0, $capacityBits - 4) . '0000' === $bits ? $bits : $bits;
     $bits = substr($bits . str_repeat('0', 4), 0, $capacityBits);
     while (strlen($bits) % 8) $bits .= '0';
     $pads = [0xEC, 0x11]; $pi = 0;
@@ -104,15 +103,19 @@ function qr_encode(string $text): array {
     for ($mask = 0; $mask < 8; $mask++) {
         $mm = $m;
         $bi = 0;
-        for ($c = 0; $c < $n; $c++) {
-            for ($r = 0; $r < $n; $r++) {
-                if ($r == 6) continue;
-                $up = ($c % 2 == 0);
-                $rr = $up ? $n - 1 - $r : $r;
-                if ($mm[$rr][$c] !== null) continue;
-                $bit = $bi < count($bitsArr) ? $bitsArr[$bi++] : 0;
-                if (qr_mask($mask, $rr, $c)) $bit ^= 1;
-                $mm[$rr][$c] = $bit;
+        // penempatan zigzag standar: berpasangan kolom dari kanan ke kiri
+        for ($right = $n - 1; $right >= 1; $right -= 2) {
+            if ($right == 6) $right = 5; // lewati kolom timing
+            for ($vert = 0; $vert < $n; $vert++) {
+                for ($j = 0; $j < 2; $j++) {
+                    $c = $right - $j;
+                    $up = (($right + 1) & 2) == 0;
+                    $r = $up ? $n - 1 - $vert : $vert;
+                    if ($mm[$r][$c] !== null) continue;
+                    $bit = $bi < count($bitsArr) ? $bitsArr[$bi++] : 0;
+                    if (qr_mask($mask, $r, $c)) $bit ^= 1;
+                    $mm[$r][$c] = $bit;
+                }
             }
         }
         qr_format($mm, $v, $mask);
@@ -192,9 +195,18 @@ function qr_penalty(array $m): int {
     }
     for ($r = 0; $r < $n - 1; $r++) for ($c = 0; $c < $n - 1; $c++)
         if ($m[$r][$c] === $m[$r][$c+1] && $m[$r][$c] === $m[$r+1][$c] && $m[$r][$c] === $m[$r+1][$c+1]) $pen += 3;
-    foreach ([1,0,1,1,1,0,1] as $k => $b) {
-        for ($i = 0; $i < $n; $i++) {
-            if ($m[$i][$k] === $b && ($k == 0 || $m[$i][$k-1] === ($k>0?$b:0) || true)) {}
+    // aturan 4: pola 1:1:3:1:1 (finder-like) pada baris & kolom
+    $pat1 = [1,0,1,1,1,0,1,0,0,0,0]; $pat2 = [0,0,0,0,1,0,1,1,1,0,1];
+    for ($r = 0; $r < $n; $r++) {
+        for ($c = 0; $c + 11 <= $n; $c++) {
+            $w = array_slice($m[$r], $c, 11);
+            if ($w === $pat1 || $w === $pat2) $pen += 40;
+        }
+    }
+    for ($c = 0; $c < $n; $c++) {
+        for ($r = 0; $r + 11 <= $n; $r++) {
+            $w = array_map(fn($rr) => $m[$rr][$c], range($r, $r + 10));
+            if ($w === $pat1 || $w === $pat2) $pen += 40;
         }
     }
     $dark = 0; for ($r = 0; $r < $n; $r++) for ($c = 0; $c < $n; $c++) if ($m[$r][$c]) $dark++;
