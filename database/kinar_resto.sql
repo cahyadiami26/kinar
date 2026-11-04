@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
   slug          VARCHAR(160) NOT NULL UNIQUE,
   description   TEXT,
   price         INT NOT NULL DEFAULT 0,
-  portion       VARCHAR(80),
+  `portion`     VARCHAR(80),
   image         VARCHAR(255),
   tags          VARCHAR(255) COMMENT 'dipisah koma: Signature Chef, Pedas Gurih, ...',
   is_available  TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'status operasional dapur',
@@ -219,7 +219,7 @@ INSERT INTO printers (name, location, ip_address, port, type, mode) VALUES
 ('Printer Dapur', 'dapur', '192.168.1.101', 9100, 'ESC/POS', 'semua');
 
 -- ---------- Data Contoh Menu ----------
-INSERT INTO menu_items (category_id, name, slug, description, price, portion, tags, is_available, is_public, is_featured, sort_order) VALUES
+INSERT INTO menu_items (category_id, name, slug, description, price, `portion`, tags, is_available, is_public, is_featured, sort_order) VALUES
 (1,'Rendang Wagyu Minang','rendang-wagyu-minang','Daging wagyu empuk yang dimasak 8 jam bersama santan kelapa tua muda dan 18 rempah khas Minang.','285000','Porsi 1-2 orang','Signature Chef,Best Seller',1,1,1,1),
 (1,'Bebek Betutu Ginyar','bebek-betutu-ginyar','Bebek muda Balinese yang dibumbui base gede, dimasak dalam daun pisang hingga harum.','240000','Porsi 2 orang','Pedas Gurih,Best Seller',1,1,1,2),
 (1,'Gurame Saus Mangga','gurame-saus-mangga','Ikan gurame goreng renyah disiram saus mangga segar manis asam.','195000','Porsi 2-3 orang','Rekomendasi Tamu',1,1,0,3),

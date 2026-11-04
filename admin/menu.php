@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         $img = upload_image($_FILES['image'], 'menu');
     }
     if ($id > 0) {
-        $sql = 'UPDATE menu_items SET category_id=?,name=?,slug=?,description=?,price=?,portion=?,tags=?,is_available=?,is_public=?,is_featured=?';
+        $sql = 'UPDATE menu_items SET category_id=?,name=?,slug=?,description=?,price=?,`portion`=?,tags=?,is_available=?,is_public=?,is_featured=?';
         $p = [$cat,$name,slugify($name),$desc,$price,$portion,$tags,$avail,$pub,$feat];
         if ($img) { $sql .= ',image=?'; $p[] = $img; }
         $sql .= ' WHERE id=?'; $p[] = $id;
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         queue_sync('menu', $id);
         flash('Menu diperbarui.');
     } else {
-        db()->prepare('INSERT INTO menu_items (category_id,name,slug,description,price,portion,image,tags,is_available,is_public,is_featured,sort_order)
+        db()->prepare('INSERT INTO menu_items (category_id,name,slug,description,price,`portion`,image,tags,is_available,is_public,is_featured,sort_order)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,(SELECT COALESCE(MAX(sort_order),0)+1 FROM menu_items m))')
             ->execute([$cat,$name,slugify($name),$desc,$price,$portion,$img,$tags,$avail,$pub,$feat]);
         queue_sync('menu', (int)db()->lastInsertId());
