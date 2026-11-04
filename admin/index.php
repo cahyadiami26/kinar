@@ -7,7 +7,7 @@ $stats = [
   'menu_aktif'   => (int) db()->query("SELECT COUNT(*) FROM menu_items WHERE is_available=1")->fetchColumn(),
   'artikel'      => (int) db()->query("SELECT COUNT(*) FROM articles WHERE status='terbit'")->fetchColumn(),
   'reservasi'    => (int) db()->query("SELECT COUNT(*) FROM reservations WHERE status='baru'")->fetchColumn(),
-  'pesanan_hari' => (int) db()->query("SELECT COUNT(*) FROM orders WHERE DATE(created_at)=?")->execute([$today]) ?: (int) db()->query("SELECT COUNT(*) FROM orders WHERE DATE(created_at)='$today'")->fetchColumn(),
+  'pesanan_hari' => (function () use ($today) { $s = db()->prepare("SELECT COUNT(*) FROM orders WHERE DATE(created_at)=?"); $s->execute([$today]); return (int) $s->fetchColumn(); })(),
 ];
 $penjualan = (int) db()->query("SELECT COALESCE(SUM(total),0) FROM orders WHERE DATE(created_at)='$today' AND status IN ('siap','disajikan','selesai')")->fetchColumn();
 $meja_terisi = (int) db()->query("SELECT COUNT(*) FROM resto_tables WHERE status!='kosong'")->fetchColumn();
